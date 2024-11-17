@@ -1,4 +1,5 @@
 const jwt = require("jsonwebtoken");
+const session = require('express-session');
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 const bcrypt = require('bcrypt');
@@ -42,14 +43,22 @@ exports.SignIn = async(req, res) => {
         if (user) {  
             const isPasswordValid = await bcrypt.compare(password, user.password); 
             if (isPasswordValid){
-                const token = jwt.sign({ sub: user.id, role: user.role }, process.env.SECRET_KEY, {
-                    expiresIn: "7d",
-                });
+
+                const token = jwt.sign(
+                    { sub: user.id, role: user.role }, process.env.JWT_SECRET, {
+                        expiresIn: "7d", }
+                    );
+
+                req.session.user = {
+                    id: user.id,
+                    email: user.email,
+                    role: user.role,
+                    };
 
                 return res.status(200).json({
                     message: "Authentication successful",
-                    user: { email: user.email, role: user.role },
                     token: token,
+                    user: req.session.user
                 }); 
             } else {
                 return res.status(401).json({ message: "Invalid password" });
@@ -64,6 +73,29 @@ exports.SignIn = async(req, res) => {
         return res.status(500).json({ message: "Internal server error" });
     }
 }
+
+exports.LogOut = async(req, res) => {
+    req.session.destroy((error) => {
+        if (error) {
+          console.error(error);
+          return res.status(500).json({ message: 'Error al cerrar sesión' });
+        } else {
+            res.clearCookie('connect.sid'); 
+            res.status(200).json({ message: 'Sesión cerrada correctamente' });
+        }
+      });
+}
+
+exports.Authenticaded = async(req, res) => {
+    if (!req.session.user) {
+        return res.status(401).json({ message: 'Unauthorized' });
+    }
+    res.status(200).json({
+        message: "Welcome to your profile!",
+        user: req.session.user,
+    })
+}
+
 
 exports.GetAll = async(req, res) => {
 
