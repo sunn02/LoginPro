@@ -1,8 +1,8 @@
 require('dotenv').config();
-console.log('SECRET_KEY:', process.env.JWT_SECRET); 
 const jwt = require("jsonwebtoken");
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
+
 
 exports.jwt = (roles = []) => {
   // roles param can be a single role string (e.g. Role.User or 'User')
@@ -11,6 +11,7 @@ exports.jwt = (roles = []) => {
     roles = [roles];
   }
   return [
+
     (req, res, next) => {
 
       if (req.session.user) {

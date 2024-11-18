@@ -1,21 +1,34 @@
 const jwt = require("jsonwebtoken");
+const DOMPurify = require('dompurify');
+const { JSDOM } = require('jsdom');
 const session = require('express-session');
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 const bcrypt = require('bcrypt');
 
+
+const window = new JSDOM('').window;
+const purify = DOMPurify(window);
+
 exports.SignUp = async(req, res) => {
 
-    const { email, password, role } = req.body; 
-
     try{
+        const email = purify.sanitize(req.body.email);
+        const password = purify.sanitize(req.body.password);
+        const role = purify.sanitize(req.body.role);
+
+        const validRoles = ['User', 'Admin'];
+        if (!validRoles.includes(role)) {
+            return res.status(400).json({ message: "Invalid role. Role must be 'User' or 'Admin'." });
+        }
+
         const hashedPassword = await bcrypt.hash(password, 10);
 
         const newUser = await prisma.user.create({
             data: {
                 email: email,
                 password: hashedPassword,
-                role: role || "User",
+                role: role,
             }
         });
 
@@ -31,7 +44,9 @@ exports.SignUp = async(req, res) => {
 };
 
 exports.SignIn = async(req, res) => {
-    const { email, password} = req.body
+    const email = purify.sanitize(req.body.email);
+    const password = purify.sanitize(req.body.password);
+
 
     if (!email || !password) {
         return res.status(400).json({ message: "Email and password are required" });
@@ -48,6 +63,17 @@ exports.SignIn = async(req, res) => {
                     { sub: user.id, role: user.role }, process.env.JWT_SECRET, {
                         expiresIn: "7d", }
                     );
+                
+                
+                    // const csrfToken = crypto.randomBytes(20).toString('hex');
+
+                    // // Store the CSRF token in the user document
+                    // user.csrfToken = csrfToken;
+                    // await user.save();
+            
+                    // // Set cookie for CSRF token
+                    // res.cookie('csrf_token', csrfToken, { httpOnly: false, secure: false, sameSite: 'Strict' });
+                
 
                 req.session.user = {
                     id: user.id,
@@ -77,13 +103,13 @@ exports.SignIn = async(req, res) => {
 exports.LogOut = async(req, res) => {
     req.session.destroy((error) => {
         if (error) {
-          console.error(error);
-          return res.status(500).json({ message: 'Error al cerrar sesión' });
+            console.error(error);
+                return res.status(500).json({ message: 'Error al cerrar sesión' });
         } else {
             res.clearCookie('connect.sid'); 
             res.status(200).json({ message: 'Sesión cerrada correctamente' });
         }
-      });
+    });
 }
 
 exports.Authenticaded = async(req, res) => {
