@@ -3,15 +3,17 @@ const express = require('express');
 const session = require('express-session');
 const https = require('https');
 const fs = require('fs');
+const config = require('./config/config');
+const path = require('path');
 const app = express();
 const port = 5000;
 const route = require('./routes/route');
-const { errorHandler } = require('./helpers/errorHandler'); 
 
 const options = {
-  key: fs.readFileSync('/home/penguin/LoginPro/src/key.pem'),  
-  cert: fs.readFileSync('/home/penguin/LoginPro/src/cert.pem') 
+  key: fs.readFileSync(path.resolve(__dirname, config.ssl.keyPath)),
+  cert: fs.readFileSync(path.resolve(__dirname, config.ssl.certPath))
 };
+
 
 app.use(session({
   secret: process.env.SESSION_SECRET,
@@ -25,7 +27,6 @@ app.use(session({
 }));
 
 app.use(express.json()); 
-app.use(errorHandler);
 app.use("/", route);
 
 

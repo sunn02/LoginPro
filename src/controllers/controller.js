@@ -5,8 +5,7 @@ const session = require('express-session');
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 const bcrypt = require('bcrypt');
-
-
+const { generateCSRFToken } = require('../helpers/csrfHandler');
 const window = new JSDOM('').window;
 const purify = DOMPurify(window);
 
@@ -63,23 +62,14 @@ exports.SignIn = async(req, res) => {
                     { sub: user.id, role: user.role }, process.env.JWT_SECRET, {
                         expiresIn: "7d", }
                     );
-                
-                
-                    // const csrfToken = crypto.randomBytes(20).toString('hex');
-
-                    // // Store the CSRF token in the user document
-                    // user.csrfToken = csrfToken;
-                    // await user.save();
-            
-                    // // Set cookie for CSRF token
-                    // res.cookie('csrf_token', csrfToken, { httpOnly: false, secure: false, sameSite: 'Strict' });
-                
 
                 req.session.user = {
                     id: user.id,
                     email: user.email,
                     role: user.role,
                     };
+
+                    generateCSRFToken(req, res);
 
                 return res.status(200).json({
                     message: "Authentication successful",

@@ -1,3 +1,7 @@
 node_modules
 # Keep environment variables out of version control
 .env
+# Ignorar claves y certificados
+src/config/key.pem
+src/config/cert.pem
+
