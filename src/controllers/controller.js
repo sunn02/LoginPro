@@ -14,12 +14,6 @@ exports.SignUp = async(req, res) => {
     try{
         const email = purify.sanitize(req.body.email);
         const password = purify.sanitize(req.body.password);
-        const role = purify.sanitize(req.body.role);
-
-        const validRoles = ['User', 'Admin'];
-        if (!validRoles.includes(role)) {
-            return res.status(400).json({ message: "Invalid role. Role must be 'User' or 'Admin'." });
-        }
 
         const hashedPassword = await bcrypt.hash(password, 10);
 
@@ -27,7 +21,7 @@ exports.SignUp = async(req, res) => {
             data: {
                 email: email,
                 password: hashedPassword,
-                role: role,
+                role: 'User',
             }
         });
 

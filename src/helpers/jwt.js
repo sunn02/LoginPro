@@ -46,7 +46,7 @@ exports.jwt = (roles = []) => {
 
       try {
         const user = await prisma.user.findUnique({
-          where: { id: req.user.sub },
+          where: { id: req.user.id },
         });
 
         if (!user || (roles.length && !roles.includes(user.role))) {

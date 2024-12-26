@@ -31,5 +31,5 @@ app.use("/", route);
 
 
 https.createServer(options, app).listen(port, () => {
-  console.log(`Servidor HTTPS en ejecución en https://localhost: ${port}`);
+  console.log(`Servidor HTTPS en ejecución en https://localhost:${port}`);
 });
